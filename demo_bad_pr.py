@@ -1,44 +1,62 @@
-# demo_bad_pr.py — intentionally flawed, for testing the review bot
+# demo_bad_pr_part2.py — more intentional landmines
 
-import sqlite3
+import pickle
+import hashlib
+import random
+import subprocess
 import os
 
-API_KEY = "sk-live-51H8xJ2eZvKYlo2C9gQ7t3mF4nR8pL0w"  # hardcoded secret — security
+def run_backup(filename):
+    # command injection via unsanitized shell interpolation
+    os.system("tar -czf backup.tar.gz " + filename)
 
-def get_user(username):
-    conn = sqlite3.connect("app.db")
-    cursor = conn.cursor()
-    # string-formatted SQL — classic SQL injection
-    query = "SELECT * FROM users WHERE username = '" + username + "'"
-    cursor.execute(query)
-    return cursor.fetchone()
+def load_user_session(data):
+    # insecure deserialization — pickle on untrusted input = RCE
+    return pickle.loads(data)
 
-def divide_scores(scores, total):
-    # no guard against total == 0 — runtime bug
-    return [s / total for s in scores]
+def hash_password(password):
+    # MD5 for passwords — broken, fast-crackable hash
+    return hashlib.md5(password.encode()).hexdigest()
 
-def load_config(path):
-    f = open(path)          # file handle never closed — resource leak
-    data = f.read()
-    return data
+def generate_reset_token():
+    # non-cryptographic RNG used for a security-sensitive token
+    return str(random.randint(100000, 999999))
 
-def find_duplicates(items):
-    # O(n^2) when a set-based approach is O(n) — performance
-    duplicates = []
-    for i in range(len(items)):
-        for j in range(len(items)):
-            if i != j and items[i] == items[j] and items[i] not in duplicates:
-                duplicates.append(items[i])
-    return duplicates
+def read_user_file(base_dir, filename):
+    # path traversal — no check for '../' escaping base_dir
+    path = os.path.join(base_dir, filename)
+    with open(path) as f:
+        return f.read()
 
-def process(user_input):
-    # eval on untrusted input — arbitrary code execution
-    return eval(user_input)
+def add_item(item, bucket=[]):
+    # mutable default argument — shared state across calls, classic gotcha
+    bucket.append(item)
+    return bucket
 
-class OrderProcessor:
-    def __init__(self):
-        self.discount = 0.1
+def fetch_all_orders(user_ids):
+    # N+1 query pattern — one query per id instead of a batch query
+    results = []
+    for uid in user_ids:
+        results.append(db_query(f"SELECT * FROM orders WHERE user_id = {uid}"))
+    return results
 
-    def apply_discount(self, price):
-        # magic number, no validation that price >= 0 — maintainability
-        return price - (price * self.discount)
+def is_admin(user):
+    # assert used for a security check — stripped out entirely with `python -O`
+    assert user.role == "admin"
+    return True
+
+def process_payment(amount):
+    try:
+        charge(amount)
+    except:  # bare except — silently swallows everything, including real bugs
+        pass
+
+def render_comment(comment_text):
+    # no escaping — reflected XSS if this ever hits an HTML template
+    return f"<div>{comment_text}</div>"
+
+def db_query(q):
+    ...  # stub for the fixture above
+
+def charge(amount):
+    ...  # stub for the fixture above
