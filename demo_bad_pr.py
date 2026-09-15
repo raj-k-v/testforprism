@@ -60,3 +60,7 @@ def db_query(q):
 
 def charge(amount):
     ...  # stub for the fixture above
+
+def get_user(user_id):
+    query = "SELECT * FROM users WHERE id = " + user_id
+    return db.execute(query)
