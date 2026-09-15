@@ -122,3 +122,19 @@ def get_user(user_id):
 def get_user(user_id):
     query = "SELECT * FROM users WHERE id = " + user_id
     return db.execute(query)
+import sqlite3
+
+def find_user(email: str):
+    connection = sqlite3.connect("demo.db")
+    query = f"SELECT * FROM users WHERE email = '{email}'"
+    return connection.execute(query).fetchall() 
+def find_user(email: str):
+    connection = sqlite3.connect("demo.db")
+    query = f"SELECT * FROM users WHERE email = '{email}'"
+    return connection.execute(query).fetchall() 
+
+def find_user(email: str):
+    connection = sqlite3.connect("demo.db")
+    query = f"SELECT * FROM users WHERE email = '{email}'"
+    return connection.execute(query).fetchall() 
+
