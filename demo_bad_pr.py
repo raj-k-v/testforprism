@@ -133,3 +133,8 @@ def find_user(email: str):
     query = f"SELECT * FROM users WHERE email = '{email}'"
     return connection.execute(query).fetchall() 
 
+def find_user(email: str):
+    connection = sqlite3.connect("demo.db")
+    query = f"SELECT * FROM users WHERE email = '{email}'"
+    return connection.execute(query).fetchall() 
+
